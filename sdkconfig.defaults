@@ -1,0 +1,15 @@
+# ESP32-C6 configuration
+CONFIG_IDF_TARGET="esp32c6"
+
+# Minimal logging
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_DEFAULT_LEVEL=4
+
+# I2C configuration
+CONFIG_I2C_TOOLS=y
+
+# FreeRTOS configuration
+CONFIG_FREERTOS_HZ=1000
+
+# Reduce binary size
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y

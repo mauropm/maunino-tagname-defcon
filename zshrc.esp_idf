@@ -1,0 +1,49 @@
+# =============================================================================
+# ESP-IDF Environment Configuration
+# Generated for dual ESP-IDF 5.x and 6.x setup
+# =============================================================================
+
+# ESP-IDF Base Paths
+export IDF5_PATH="$HOME/esp/idf5"
+export IDF6_PATH="$HOME/esp/idf6"
+export IDF_TOOLS_BASE="$HOME/.espressif"
+
+# Python Environments
+export IDF5_PYTHON_ENV="$IDF_TOOLS_BASE/python_env/idf5_py3.11_env"
+export IDF6_PYTHON_ENV="$IDF_TOOLS_BASE/python_env/idf6_py3.14_env"
+
+# Function to switch to ESP-IDF 5.x (Python 3.11)
+use_idf5() {
+    export IDF_TOOLS_PATH="$IDF_TOOLS_BASE/idf5_tools"
+    export IDF_PYTHON_ENV_PATH="$IDF5_PYTHON_ENV"
+    export IDF_PATH="$IDF5_PATH"
+    
+    # Activate the environment
+    . "$IDF5_PATH/export.sh" >/dev/null 2>&1
+    
+    echo "✓ Switched to ESP-IDF 5.4"
+    echo "  Python: $(python --version 2>&1)"
+    echo "  IDF: $(idf.py --version 2>&1)"
+}
+
+# Function to switch to ESP-IDF 6.x (Python 3.14)
+use_idf6() {
+    export IDF_TOOLS_PATH="$IDF_TOOLS_BASE/idf6_tools"
+    export IDF_PYTHON_ENV_PATH="$IDF6_PYTHON_ENV"
+    export IDF_PATH="$IDF6_PATH"
+    
+    # Activate the environment
+    . "$IDF6_PATH/export.sh" >/dev/null 2>&1
+    
+    echo "✓ Switched to ESP-IDF 6.x"
+    echo "  Python: $(python --version 2>&1)"
+    echo "  IDF: $(idf.py --version 2>&1)"
+}
+
+# Short aliases for quick switching
+alias idf5='use_idf5'
+alias idf6='use_idf6'
+
+# Auto-detect and activate last used IDF version (optional)
+# Uncomment the line below to enable auto-activation
+# use_idf5  # Default to IDF5 on shell startup
