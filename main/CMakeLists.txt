@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "screen_test.c"
+    SRCS "conference_badge.c"
     INCLUDE_DIRS "."
     REQUIRES sh1106_driver
 )
