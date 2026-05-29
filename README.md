@@ -1,6 +1,14 @@
-# SH1106 OLED Screen Test for Electronic Cats Minino (ESP32-C6)
+# Conf tag name for Electronic Cats Minino (ESP32-C6)
 
-This is a minimal standalone firmware for testing SH1106 OLED displays on the **Electronic Cats Minino** development board (ESP32-C6). The firmware validates display functionality including I2C communication, framebuffer rendering, text, graphics, and animations.
+Conference badge firmware for PWNTERREY 2026 cybersecurity conference. Runs on Electronic Cats Minino (ESP32-C6) with SH1106 128x64 OLED.
+Four-mode looping demo (16s total):
+- PRIMITIVES: Animated pulsing circles and expanding rectangles
+- TEXT: PWNTERREY 2026 title screen
+- GRAPHICS: Grid pattern with diagonal X and concentric boxes  
+- TEXT_2: MAUROPM badge name
+Pure C, ESP-IDF 5.x, static memory allocation, ~190 lines. Uses existing display driver with no new dependencies.
+
+Based on the minimal standalone firmware for testing SH1106 OLED displays on the **Electronic Cats Minino** development board (ESP32-C6). The firmware validates display functionality including I2C communication, framebuffer rendering, text, graphics, and animations.
 
 ## Hardware Requirements
 
@@ -16,16 +24,13 @@ This is a minimal standalone firmware for testing SH1106 OLED displays on the **
 
 The firmware runs a continuous loop of display tests:
 
-1. **Splash Screen** - Shows "SH1106 Test", "ESP32-C6", and "Minino"
-2. **Text Rendering** - Tests three font sizes (small, medium, large)
-3. **Line Drawing** - Grid pattern and diagonal lines
-4. **Rectangle Drawing** - Outline and filled rectangles
-5. **Circle Drawing** - Concentric circles and filled circles
-6. **Invert Test** - Toggles display inversion
-7. **Bitmap Test** - Renders a 16x16 logo with animation
-8. **Bouncing Ball Animation** - Ball bouncing within borders
-9. **Scrolling Text** - Scrolling text effect
-10. **Pattern Test** - Checkerboard fill patterns
+PRIMITIVES → TEXT → GRAPHICS → TEXT_2 → (repeat)
+
+PRIMITIVES - Some GFX.
+TEXT - Conf name
+GRAPHICS - Atari old graphics style.
+TEXT_2 - tag name.
+
 
 ## Prerequisites
 
