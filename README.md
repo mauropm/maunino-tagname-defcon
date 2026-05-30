@@ -1,14 +1,17 @@
-# Conf tag name for Electronic Cats Minino (ESP32-C6)
+# DEF CON Badge - Electronic Cats Minino (ESP32-C6)
 
-Conference badge firmware for PWNTERREY 2026 cybersecurity conference. Runs on Electronic Cats Minino (ESP32-C6) with SH1106 128x64 OLED.
-Four-mode looping demo (16s total):
-- PRIMITIVES: Animated pulsing circles and expanding rectangles
-- TEXT: PWNTERREY 2026 title screen
-- GRAPHICS: Grid pattern with diagonal X and concentric boxes  
-- TEXT_2: MAUROPM badge name
-Pure C, ESP-IDF 5.x, static memory allocation, ~190 lines. Uses existing display driver with no new dependencies.
+DEF CON-style electronic badge/tagname firmware for the **Electronic Cats Minino** (ESP32-C6) with SH1106 128x64 OLED display.
 
-Based on the minimal standalone firmware for testing SH1106 OLED displays on the **Electronic Cats Minino** development board (ESP32-C6). The firmware validates display functionality including I2C communication, framebuffer rendering, text, graphics, and animations.
+The firmware continuously loops through a sequence of animated screens:
+
+1. **DEF CON Logo** (5s) - Pixel art DEF CON logo with fade-in effect
+2. **Liquid Splash** (1s) - Procedural liquid/paint splash covering the screen
+3. **Windshield Wiper** (5s) - Virtual wiper cleans the splash away, revealing the tagname
+4. **Tagname "MAURO"** (5s) - Large centered text with CRT scanline flicker
+5. **Electronic Cats Logo** (5s) - Pixel art Electronic Cats logo with fade-in
+6. **Repeat forever** (~21s total cycle)
+
+Pure C, ESP-IDF 5.x, static memory allocation, no dynamic allocation during animation.
 
 ## Hardware Requirements
 
@@ -20,313 +23,171 @@ Based on the minimal standalone firmware for testing SH1106 OLED displays on the
   - VCC: 3.3V
   - GND: GND
 
-## What This Demo Shows
+## Animation Sequence
 
-The firmware runs a continuous loop of display tests:
-
-PRIMITIVES → TEXT → GRAPHICS → TEXT_2 → (repeat)
-
-PRIMITIVES - Some GFX.
-TEXT - Conf name
-GRAPHICS - Atari old graphics style.
-TEXT_2 - tag name.
-
-
-## Prerequisites
-
-### 1. ESP-IDF 5.4 Installation
-
-Ensure you have ESP-IDF 5.4 installed with ESP32-C6 support.
-
-### 2. Environment Configuration
-
-This project requires the ESP-IDF environment to be properly configured. You need to add the ESP-IDF environment switching functions to your shell configuration file.
-
-**For macOS/Linux with Zsh (recommended):**
-
-Add the following to your `~/.zshrc` or `~/.zprofile`:
-
-```bash
-# ESP-IDF Environment Configuration
-export IDF_TOOLS_BASE="$HOME/.espressif"
-
-# ESP-IDF 5.x configuration
-export IDF5_PATH="$HOME/esp/idf5"
-export IDF5_PYTHON_ENV="$IDF_TOOLS_BASE/python_env/idf5_py3.11_env"
-
-# Function to activate ESP-IDF 5.x environment
-use_idf5() {
-    export IDF_TOOLS_PATH="$IDF_TOOLS_BASE/idf5_tools"
-    export IDF_PYTHON_ENV_PATH="$IDF5_PYTHON_ENV"
-    export IDF_PATH="$IDF5_PATH"
-    
-    # Activate the environment
-    . "$IDF5_PATH/export.sh" >/dev/null 2>&1
-    echo "✓ Switched to ESP-IDF 5.4"
-    echo "  Python: $(python --version 2>&1)"
-    echo "  IDF: $(idf.py --version 2>&1)"
-}
-
-# Short alias
-alias idf5='use_idf5'
+```
+BOOT → DEFCON_LOGO → LIQUID_SPLASH → WIPER_REVEAL → TAGNAME → ELECTRONIC_CATS → LOOP
 ```
 
-**For Bash users:**
+| Screen | Duration | Description |
+|--------|----------|-------------|
+| DEF CON Logo | 5s | 124x64px pixel art logo, centered, with fade-in |
+| Liquid Splash | 1s | Procedural expanding blobs covering the display |
+| Wiper Reveal | 5s | 3-pass windshield wiper cleaning animation |
+| Tagname | 5s | "MAURO" at 3x size, centered, with scanline flicker |
+| Electronic Cats | 5s | 124x64px pixel art logo, centered, with fade-in |
 
-Add the same code to your `~/.bash_profile` or `~/.bashrc`.
+## Importing Custom Bitmaps
 
-**For Windows (WSL):**
+All logo bitmaps are stored in `main/badge_bitmaps.h` as C arrays. To add your own bitmap:
 
-Add to your `~/.bashrc` in WSL.
+### Step-by-Step Guide
 
-### 3. Verify Installation
+1. **Create pixel art** at https://pixelartvillage.com/
+   - Design your logo or graphic
+   - Export/download the image
 
-After configuring your shell, verify the setup:
+2. **Resize the image**
+   - Open the downloaded image in any image editor
+   - Resize it to fit within 128x64 pixels (keep aspect ratio, best fit possible)
 
-```bash
-# Load your shell configuration
-source ~/.zshrc  # or source ~/.bash_profile
+3. **Convert to Arduino C code** at https://javl.github.io/image2cpp/
+   - Upload your resized image
+   - Set **Canvas size** to `128x64`
+   - Select **Drawing mode**: `Atkinson` dithering
+   - Check **Scale to fit** (keep original size)
+   - Check **Center** horizontally and vertically
+   - Click **Generate code**
+   - Copy the generated Arduino `PROGMEM` array
 
-# Activate ESP-IDF 5 environment
-use_idf5
+4. **Ask opencode to integrate it**
+   - Paste the Arduino code and ask opencode to convert it to the project's bitmap format
+   - The bitmap will be added to `main/badge_bitmaps.h` and wired into the appropriate screen
 
-# Verify installation
-idf.py --version
-python --version
-idf.py --list-targets
-```
+### Bitmap Format
 
-Expected output:
-```
-ESP-IDF v5.4.1
-Python 3.11.x
-esp32c6
+Bitmaps in `badge_bitmaps.h` use MSB-first, row-by-row format:
+
+```c
+#define MY_LOGO_W 124
+#define MY_LOGO_H 64
+
+static const uint8_t my_logo_bmp[] = {
+    0xff, 0xff, ..., // Row 0 (16 bytes for 124px width)
+    0xff, 0xff, ..., // Row 1
+    // ... 64 rows total
+};
 ```
 
 ## Build Instructions
 
-### Quick Build (using scripts)
+### Quick Build
 
 ```bash
-cd screen_test
-
-# Build the project
-./build.sh
+./build.sh build
 ```
 
 ### Manual Build
 
 ```bash
-cd screen_test
-
-# Activate ESP-IDF 5 environment
 use_idf5
-
-# Set target to ESP32-C6 (if not already set)
-idf.py set-target esp32c6
-
-# Build the project
 idf.py build
-```
-
-### Build Output
-
-On successful build, you'll see:
-```
-Generated /path/to/screen_test/build/screen_test.bin
-screen_test.bin binary size 0x28b40 bytes (162 KB)
 ```
 
 ## Flash Instructions
 
-### Using Flash Script
-
 ```bash
-./flash.sh
-```
-
-### Manual Flash
-
-```bash
-# Activate ESP-IDF 5 environment
-use_idf5
-
-# Flash to device (replace with your serial port)
-idf.py -p /dev/cu.usbmodem21201 flash
-```
-
-**Common serial ports:**
-- macOS: `/dev/cu.usbmodem*` or `/dev/cu.usbserial-*`
-- Linux: `/dev/ttyUSB0` or `/dev/ttyACM0`
-- Windows: `COM3`, `COM4`, etc.
-
-### Find Your Serial Port
-
-**macOS:**
-```bash
-ls /dev/cu.* | grep -E "usbmodem|serial"
-```
-
-**Linux:**
-```bash
-ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
-```
-
-**Windows:**
-```powershell
-Get-PnpDevice -Class Ports | Where-Object { $_.Present -eq $True }
-```
-
-## Monitor Serial Output
-
-### Using Monitor Script
-
-```bash
-./monitor.sh
-```
-
-### Manual Monitor
-
-```bash
-use_idf5
-idf.py -p /dev/cu.usbmodem21201 monitor
-```
-
-### Expected Serial Output
-
-```
-I (0) SCREEN_TEST: Starting SH1106 Screen Test
-I (0) SCREEN_TEST: Target: ESP32-C6 (Minino)
-I (0) SCREEN_TEST: Display: SH1106 128x64 OLED
-I (0) SCREEN_TEST: Initializing SH1106 on I2C (SDA=6, SCL=7)
-I (0) SH1106: Display found at I2C address 0x3C
-I (0) SH1106: SH1106 initialized on I2C port 0
-I (0) SCREEN_TEST: SH1106 initialized successfully
-I (0) SCREEN_TEST: === Starting test sequence ===
-I (0) SCREEN_TEST: Test: Splash screen
-I (0) SCREEN_TEST: Calling sh1106_display()...
-I (0) SCREEN_TEST: Display result: ESP_OK
-I (0) SH1106: Display update complete
-```
-
-## Clean Build Artifacts
-
-```bash
-./clean.sh
+./build.sh flash
 ```
 
 Or manually:
+
 ```bash
 use_idf5
-idf.py clean
+idf.py -p /dev/cu.usbserial-1 flash
 ```
+
+## Monitor
+
+```bash
+./build.sh monitor
+```
+
+Or manually:
+
+```bash
+use_idf5
+idf.py -p /dev/cu.usbserial-1 monitor
+```
+
+## Clean
+
+```bash
+./build.sh clean
+```
+
+## Project Structure
+
+```
+maunino-tagname-defcon/
+├── CMakeLists.txt              # Project configuration
+├── sdkconfig.defaults          # SDK defaults (ESP32-C6)
+├── main/
+│   ├── CMakeLists.txt          # Main component config
+│   ├── conference_badge.c      # DEF CON badge firmware (animation state machine)
+│   └── badge_bitmaps.h         # Bitmap assets (DEF CON, Electronic Cats)
+├── components/
+│   └── sh1106_driver/
+│       ├── CMakeLists.txt
+│       ├── include/sh1106.h    # Driver header
+│       └── sh1106.c            # SH1106 driver implementation
+├── build.sh                    # Build/flash/monitor helper
+├── flash.sh                    # Flash script
+├── monitor.sh                  # Serial monitor script
+├── clean.sh                    # Clean build artifacts
+└── README.md                   # This file
+```
+
+## Memory Usage
+
+| Resource | Size |
+|----------|------|
+| Framebuffer (static) | 1024 bytes |
+| Splash blobs (64 max) | 320 bytes |
+| Wipe mask | 128 bytes |
+| Bitmap assets | ~2KB |
+| Task stack | 4096 bytes |
+
+No dynamic allocation during animation. All buffers are static.
 
 ## Troubleshooting
 
 ### Port Busy Error
 
-**Error**: `Could not open /dev/cu.usbmodem21201, the port is busy`
-
-**Solution**:
-1. Close any other programs using the serial port
-2. Disconnect and reconnect the USB cable
-3. Try a different USB port
+Close any other programs using the serial port, disconnect/reconnect USB.
 
 ### I2C NACK Errors
 
-**Error**: `I2C transaction unexpected nack detected`
-
-**Solutions**:
-1. Check I2C wiring (SDA/SCL)
+1. Check I2C wiring (SDA=GPIO6, SCL=GPIO7)
 2. Verify display is powered (3.3V)
 3. Try different I2C address (0x3C vs 0x3D)
-4. Add external pullup resistors (4.7kΩ) if needed
 
 ### Display Shows Inverted Colors
 
-If you see white background with black text instead of black background with white text:
-
-1. The display may need different initialization
-2. Check the `SH1106_INVERT_DISPLAY` command in `sh1106.c`
+Check the `SH1106_INVERT_DISPLAY` command in `sh1106.c` init sequence.
 
 ### Build Errors
 
-**Error**: `idf.py: command not found`
-
-**Solution**:
-1. Ensure ESP-IDF is installed
-2. Source the export script: `source ~/esp/idf5/export.sh`
-3. Or use: `use_idf5`
-
-### Flash Size Warning
-
-**Warning**: `Detected size(8192k) larger than the size in the binary image header(2048k)`
-
-This is normal and can be ignored. The firmware works correctly with 8MB flash chips.
-
-## Project Structure
-
-```
-screen_test/
-├── CMakeLists.txt              # Project CMake configuration
-├── sdkconfig.defaults          # SDK defaults for ESP32-C6
-├── main/
-│   ├── CMakeLists.txt          # Main component configuration
-│   └── screen_test.c           # Test application code
-├── components/
-│   └── sh1106_driver/
-│       ├── CMakeLists.txt      # Driver component configuration
-│       ├── include/
-│       │   └── sh1106.h        # Driver header
-│       └── sh1106.c            # Driver implementation
-├── build.sh                    # Build script
-├── flash.sh                    # Flash script
-├── monitor.sh                  # Monitor script
-├── clean.sh                    # Clean script
-└── README.md                   # This file
-```
-
-## Customization
-
-### Change I2C Pins
-
-Edit `main/screen_test.c`:
-```c
-int sda_gpio = 6;  // Change to your SDA pin
-int scl_gpio = 7;  // Change to your SCL pin
-```
-
-### Change Display Size
-
-Edit `components/sh1106_driver/include/sh1106.h`:
-```c
-// For 128x32 display
-#define SH1106_128_32
-// #define SH1106_128_64
-```
-
-### Adjust Contrast
-
-In `sh1106.c`, modify the contrast value:
-```c
-sh1106_write_command(display, SH1106_SET_CONTRAST);
-sh1106_write_command(display, 0xCF);  // Change 0xCF to adjust contrast
+```bash
+use_idf5
+source ~/esp/idf5/export.sh
+idf.py build
 ```
 
 ## License
 
-Based on Adafruit SH1106 library.  
+Based on Adafruit SH1106 library.
 BSD License - see original repository for details.
-
-## Version History
-
-- **v1.0.0** - Initial release
-  - ESP-IDF 5.4 compatible
-  - ESP32-C6 support (Minino)
-  - I2C address auto-detection (0x3C/0x3D)
-  - Color inversion for proper rendering
-  - Comprehensive display tests
-  - Chunked I2C data transmission
 
 ## Support
 
